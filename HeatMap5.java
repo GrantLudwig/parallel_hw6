@@ -29,7 +29,7 @@ public class HeatMap5 {
 	private static JButton button;
 	private static Color[][] grid;
 	private static int current;
-	private static List<HeatMap> heatmaps;
+	private static List<HeatMap> finalHeatmaps;
 
 	static class HeatScan extends GeneralScan3<Observation, HeatMap> {
 
@@ -59,14 +59,21 @@ public class HeatMap5 {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
-		List<Observation> data = new ArrayList<Observation>();
+		ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
+		//List<Observation> data = new ArrayList<Observation>();
 		try {
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILENAME));
-			// int count = 0;
+			int timeNum = 0;
 			Observation obs = (Observation) in.readObject();
+			observations.add(new ArrayList<Observation>());
 			while (!obs.isEOF()) {
-				// System.out.println(++count + ": " + obs);
-				data.add(obs);
+				// add empty observations till we reach time step we need
+				while (timeNum < obs.time) {
+					observations.add(new ArrayList<Observation>());
+					timeNum++;
+				}
+				observations.get(timeNum).add(obs);
+				//data.add(obs);
 				obs = (Observation) in.readObject();
 			}
 			in.close();
@@ -75,10 +82,18 @@ public class HeatMap5 {
 			e.printStackTrace();
 			System.exit(1);
 		}
-
-		HeatScan scanner = new HeatScan(data);
+		ArrayList<HeatScan> HeatScans = new ArrayList<HeatScan>();
+		ArrayList<HeatMap> heatmaps = new ArrayList<HeatMap>();
+		for (int i = 0; i < observations.size(); i++) {
+			HeatScans.add(new HeatScan(observations.get(i)));
+			heatmaps.add(HeatScans.get(i).getReduction());
+		}
 		// System.out.println("reduction: " + scanner.getReduction());
-		heatmaps = scanner.getScan();
+		//heatmaps = scanner.getScan();
+
+		// decayed heatmaps
+		finalHeatmaps = decayedHeatmaps(heatmaps);
+
 		current = 0;
 
 		grid = new Color[DIM][DIM];
@@ -99,9 +114,25 @@ public class HeatMap5 {
 		animate();
 	}
 
+	private static List<HeatMap> decayedHeatmaps(ArrayList<HeatMap> heatMaps) {
+		List<HeatMap> returnMaps = new ArrayList<HeatMap>();
+
+		for (int i = 0; i < heatMaps.size(); i++) {
+			int minIndex = i - 100;
+			if (minIndex < 0)
+				minIndex = 0;
+			HeatMap tempMap = heatMaps.get(i);
+			for (int j = minIndex; j < i; j++) {
+				tempMap = HeatMap.combine(tempMap, heatMaps.get(j));
+			}
+			returnMaps.add(tempMap);
+		}
+		return returnMaps;
+	}
+
 	private static void animate() throws InterruptedException {
 		button.setEnabled(false);
-		for (current = 0; current < heatmaps.size(); current++) {
+		for (current = 0; current < finalHeatmaps.size(); current++) {
 			fillGrid(grid);
 			application.repaint();
 			Thread.sleep(SLEEP_INTERVAL);
@@ -129,7 +160,7 @@ public class HeatMap5 {
 	private static void fillGrid(Color[][] grid) {
 		for (int r = 0; r < grid.length; r++)
 			for (int c = 0; c < grid[r].length; c++)
-				grid[r][c] = interpolateColor(heatmaps.get(current).getCell(r, c) / HOT_CALIB, COLD, HOT);
+				grid[r][c] = interpolateColor(finalHeatmaps.get(current).getCell(r, c) / HOT_CALIB, COLD, HOT);
 	}
 
 	private static Color interpolateColor(double ratio, Color a, Color b) {
