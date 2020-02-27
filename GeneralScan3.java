@@ -39,7 +39,7 @@ public class GeneralScan3<ElemType, TallyType> {
 		last_interior = ROOT;
 		while (dataCount(last_interior) > threshold)
 			last_interior = left(last_interior);
-		last_interior = left(last_interior) - 1;  // final level of cap for tight loop results
+		last_interior = left(last_interior); // final level of cap for tight loop results
 		//System.out.println("m = " + last_interior + " dataCount: " + dataCount(last_interior));
 		interior = new ArrayList<TallyType>(last_interior + 1);
 		for (int i = 0; i < last_interior; i++)

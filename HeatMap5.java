@@ -21,7 +21,8 @@ import java.util.List;
 public class HeatMap5 {
 	private static final int DIM = 20;
 	private static final int SLEEP_INTERVAL = 50; // milliseconds
-	private static final String FILENAME = "observation_gaussian.dat";
+	//private static final String FILENAME = "observation_gaussian.dat";
+	private static final String FILENAME = "observation_grant.dat";
 	private static final Color COLD = new Color(0x0a, 0x37, 0x66), HOT = Color.RED;
 	private static final double HOT_CALIB = 1.0;
 	private static final String REPLAY = "Replay";
@@ -31,30 +32,51 @@ public class HeatMap5 {
 	private static int current;
 	private static List<HeatMap> finalHeatmaps;
 
-	static class HeatScan extends GeneralScan3<Observation, HeatMap> {
+	// Heatmaps are indexed by time
+	// Obervations are the observations in time
+	static class HeatScan extends GeneralScan3<ArrayList<Observation>, List<HeatMap>> {
+		private int numTimes;
 
-		public HeatScan(List<Observation> raw) {
+		public HeatScan(ArrayList<ArrayList<Observation>> raw) {
 			super(raw, 100);
+			this.numTimes = raw.size();
 		}
 
 		@Override
-		protected HeatMap init() {
-			return new HeatMap();
+		protected List<HeatMap> init() {
+			List<HeatMap> heatMaps = new ArrayList<HeatMap>(numTimes);
+			for (int i = 0; i < numTimes; i++)
+				heatMaps.add(i, new HeatMap(DIM, -1.0, +1.0));
+			return heatMaps;
 		}
 
 		@Override
-		protected HeatMap prepare(Observation datum) {
-			return new HeatMap(datum.x, datum.y);
+		protected List<HeatMap> prepare(ArrayList<Observation> datum) {
+			List<HeatMap> heatMaps = init();
+			for (int i = 0; i < datum.size(); i++) {
+				heatMaps.set((int)datum.get(i).time, new HeatMap(datum.get(i).x, datum.get(i).y));
+				//heatMaps.add(new HeatMap(datum.get(i).x, datum.get(i).y));
+			}
+			return heatMaps;
 		}
 
 		@Override
-		protected HeatMap combine(HeatMap left, HeatMap right) {
-			return HeatMap.combine(left, right);
+		protected List<HeatMap> combine(List<HeatMap> left, List<HeatMap> right) {
+			List<HeatMap> heatMaps = init();
+			for (int i = 0; i < left.size(); i++) {
+				heatMaps.set(i, HeatMap.combine(left.get(i), right.get(i)));
+				//heatMaps.add(HeatMap.combine(left.get(i), right.get(i)));
+			}
+			return heatMaps;
 		}
 
 		@Override
-		protected void accum(HeatMap hm, Observation datum) {
-			hm.accum(datum.x, datum.y);
+		protected void accum(List<HeatMap> hm, ArrayList<Observation> datum) {
+			//System.out.println("hm size: " + hm.size());
+			for (int i = 0; i < datum.size(); i++) {
+				//System.out.println("datum time: " + (int)datum.get(i).time);
+				hm.get((int)datum.get(i).time).accum(datum.get(i).x, datum.get(i).y);
+			}
 		}
 	}
 
@@ -82,14 +104,23 @@ public class HeatMap5 {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		ArrayList<HeatScan> HeatScans = new ArrayList<HeatScan>();
-		ArrayList<HeatMap> heatmaps = new ArrayList<HeatMap>();
-		for (int i = 0; i < observations.size(); i++) {
-			HeatScans.add(new HeatScan(observations.get(i)));
-			heatmaps.add(HeatScans.get(i).getReduction());
-		}
+		// print out time stamps
+//		for (int i = 0; i < observations.size(); i++) {
+//			System.out.println("Time " + i + ": " + observations.get(i).size());
+//		}
+
+//		ArrayList<HeatScan> HeatScans = new ArrayList<HeatScan>();
+//		ArrayList<HeatMap> heatmaps = new ArrayList<HeatMap>();
+//		for (int i = 0; i < observations.size(); i++) {
+//			System.out.println("ob size: " + observations.get(i).size());
+//			HeatScans.add(new HeatScan(observations.get(i)));
+//			heatmaps.add(HeatScans.get(i).getReduction());
+//		}
 		// System.out.println("reduction: " + scanner.getReduction());
 		//heatmaps = scanner.getScan();
+
+		HeatScan thing = new HeatScan(observations);
+		List<HeatMap> heatmaps = thing.getReduction();
 
 		// decayed heatmaps
 		finalHeatmaps = decayedHeatmaps(heatmaps);
@@ -114,7 +145,7 @@ public class HeatMap5 {
 		animate();
 	}
 
-	private static List<HeatMap> decayedHeatmaps(ArrayList<HeatMap> heatMaps) {
+	private static List<HeatMap> decayedHeatmaps(List<HeatMap> heatMaps) {
 		List<HeatMap> returnMaps = new ArrayList<HeatMap>();
 
 		for (int i = 0; i < heatMaps.size(); i++) {

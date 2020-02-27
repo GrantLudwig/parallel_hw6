@@ -74,16 +74,49 @@ public class Observation implements Serializable {
 	 * 
 	 * @param args
 	 */
+//	public static void main(String[] args) {
+//		final String FILENAME = "observation_gaussian.dat";
+//		Random r = new Random();
+//		try {
+//			List<Observation> observations = new ArrayList<Observation>();
+//			for (long t = 0; t < 1_000; t++) {
+//				double x = r.nextGaussian() * 0.33;
+//				double y = r.nextGaussian() * 0.33;
+//				if (!(x < -1.0 || x > 1.0 || y < -1.0 || y > 1.0))
+//					observations.add(new Observation(t, x, y));
+//			}
+//			toFile(observations, FILENAME);
+//		} catch (IOException e) {
+//			System.out.println("writing to " + FILENAME + "failed: " + e);
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
+//
+//		try {
+//			Observation[] observations = fromFile(FILENAME);
+//			int count = 0;
+//			for (Observation obs : observations)
+//				System.out.println(++count + ": " + obs);
+//		} catch (IOException | ClassNotFoundException e) {
+//			System.out.println("reading from " + FILENAME + "failed: " + e);
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
+//	}
+
 	public static void main(String[] args) {
-		final String FILENAME = "observation_gaussian.dat";
+		final String FILENAME = "observation_grant.dat";
 		Random r = new Random();
 		try {
 			List<Observation> observations = new ArrayList<Observation>();
+			double x = -0.9;
+			double y = -0.9;
 			for (long t = 0; t < 1_000; t++) {
-				double x = r.nextGaussian() * 0.33;
-				double y = r.nextGaussian() * 0.33;
-				if (!(x < -1.0 || x > 1.0 || y < -1.0 || y > 1.0))
+				if (t % 100 == 0) {
 					observations.add(new Observation(t, x, y));
+					x += 0.1;
+					y += 0.1;
+				}
 			}
 			toFile(observations, FILENAME);
 		} catch (IOException e) {
