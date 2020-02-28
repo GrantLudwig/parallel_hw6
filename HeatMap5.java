@@ -26,6 +26,7 @@ public class HeatMap5 {
 	private static final Color COLD = new Color(0x0a, 0x37, 0x66), HOT = Color.RED;
 	private static final double HOT_CALIB = 1.0;
 	private static final String REPLAY = "Replay";
+	private static final int N_THREADS = 16;
 	private static JFrame application;
 	private static JButton button;
 	private static Color[][] grid;
@@ -146,19 +147,45 @@ public class HeatMap5 {
 	}
 
 	private static List<HeatMap> decayedHeatmaps(List<HeatMap> heatMaps) {
-		List<HeatMap> returnMaps = new ArrayList<HeatMap>();
+//		List<HeatMap> returnMaps = new ArrayList<HeatMap>();
+//
+//		for (int i = 0; i < heatMaps.size(); i++) {
+//			int minIndex = i - 100;
+//			if (minIndex < 0)
+//				minIndex = 0;
+//			HeatMap tempMap = heatMaps.get(i);
+//			for (int j = minIndex; j < i; j++) {
+//				tempMap = HeatMap.combine(tempMap, heatMaps.get(j));
+//				//tempMap.addWeighted(heatMaps.get(j), weight(i, j));
+//			}
+//			returnMaps.add(tempMap);
+//		}
 
-		for (int i = 0; i < heatMaps.size(); i++) {
-			int minIndex = i - 100;
-			if (minIndex < 0)
-				minIndex = 0;
-			HeatMap tempMap = heatMaps.get(i);
-			for (int j = minIndex; j < i; j++) {
-				tempMap = HeatMap.combine(tempMap, heatMaps.get(j));
-			}
-			returnMaps.add(tempMap);
+		int N = heatMaps.size();
+		int indexRange = (int) Math.ceil(N/N_THREADS);
+		int startIndex = 0;
+		for (int i = 0; i < N_THREADS; i++) {
+			int     endIndex,
+					calcIndex = startIndex + indexRange - 1;
+
+			// setup endIndex
+			if (calcIndex >= N)
+				endIndex = N - 1;
+			else
+				endIndex = calcIndex;
+
+			// start threads
+
+			startIndex = endIndex + 1;
 		}
+
 		return returnMaps;
+	}
+
+	private static double weight(int time, int timeOfObservation) {
+		double temp = 1.0 / (1 + time - timeOfObservation);
+		//System.out.println("Weight t["  + time + "] t2[" + timeOfObservation + "]: " + temp);
+		return temp;
 	}
 
 	private static void animate() throws InterruptedException {
@@ -205,4 +232,30 @@ public class HeatMap5 {
 		return new Color(cx, cy, cz);
 	}
 
+	public class SecondPass implements Runnable {
+		private int start,
+					end;
+		private List<HeatMap> readHeatMaps;
+		private List<HeatMap> writeHeatMaps;
+		public SecondPass(List<HeatMap> rhm, List<HeatMap> whm, int start, int end) {
+			this.start = start;
+			this.end = end;
+			this.readHeatMaps = rhm;
+			this.writeHeatMaps = whm;
+		}
+
+		@Override
+		public void run() {
+			for (int i = start; i < end; i++) {
+				int minIndex = i - 100;
+				if (minIndex < 0)
+					minIndex = 0;
+				HeatMap tempMap = readHeatMaps.get(i);
+				for (int j = minIndex; j < i; j++) {
+					tempMap = HeatMap.combine(tempMap, readHeatMaps.get(j));
+				}
+				writeHeatMaps.add(tempMap);
+			}
+		}
+	}
 }

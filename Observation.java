@@ -105,7 +105,7 @@ public class Observation implements Serializable {
 //	}
 
 	public static void main(String[] args) {
-		final String FILENAME = "observation_grant.dat";
+		final String FILENAME = "observation_grant2.dat";
 		Random r = new Random();
 		try {
 			List<Observation> observations = new ArrayList<Observation>();
@@ -114,6 +114,10 @@ public class Observation implements Serializable {
 			for (long t = 0; t < 1_000; t++) {
 				if (t % 100 == 0) {
 					observations.add(new Observation(t, x, y));
+					observations.add(new Observation(t, x + 0.1, y));
+					observations.add(new Observation(t, x + 0.2, y));
+					observations.add(new Observation(t, x + 0.3, y));
+					observations.add(new Observation(t, x + 0.4, y));
 					x += 0.1;
 					y += 0.1;
 				}
