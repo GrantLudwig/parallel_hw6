@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * Step 5 from HW5
@@ -21,12 +22,13 @@ import java.util.List;
 public class HeatMap5 {
 	private static final int DIM = 20;
 	private static final int SLEEP_INTERVAL = 50; // milliseconds
-	//private static final String FILENAME = "observation_gaussian.dat";
-	private static final String FILENAME = "observation_grant.dat";
+	private static final String FILENAME = "observation_gaussian.dat";
+	//private static final String FILENAME = "observation_grant.dat";
 	private static final Color COLD = new Color(0x0a, 0x37, 0x66), HOT = Color.RED;
 	private static final double HOT_CALIB = 1.0;
 	private static final String REPLAY = "Replay";
 	private static final int N_THREADS = 16;
+	private static final int SAMPLING_TIME = 5; // ms
 	private static JFrame application;
 	private static JButton button;
 	private static Color[][] grid;
@@ -162,8 +164,13 @@ public class HeatMap5 {
 //		}
 
 		int N = heatMaps.size();
-		int indexRange = (int) Math.ceil(N/N_THREADS);
+		System.out.println("N: " + N);
+		int numElements = (int) Math.ceil((double) N/ (double) SAMPLING_TIME);
+		int indexRange = (int) Math.ceil((double) N/ (double) N_THREADS);
+		System.out.println("indexRange: " + indexRange);
 		int startIndex = 0;
+		Thread[] mapThreads = new Thread[N_THREADS];
+		ArrayList<ArrayList<HeatMap>> writeHeatmaps = new ArrayList<ArrayList<HeatMap>>();
 		for (int i = 0; i < N_THREADS; i++) {
 			int     endIndex,
 					calcIndex = startIndex + indexRange - 1;
@@ -174,9 +181,23 @@ public class HeatMap5 {
 			else
 				endIndex = calcIndex;
 
+			writeHeatmaps.add(new ArrayList<HeatMap>());
 			// start threads
-
+			mapThreads[i] = new Thread(new SecondPass(heatMaps, writeHeatmaps.get(i), startIndex, endIndex, SAMPLING_TIME));
+			mapThreads[i].start();
 			startIndex = endIndex + 1;
+		}
+		List<HeatMap> returnMaps = new ArrayList<HeatMap>();
+
+		// join threads and combine results
+		for (int i = 0; i < N_THREADS; i++) {
+			try {
+				mapThreads[i].join();
+				for (int j = 0; j < writeHeatmaps.get(i).size(); j++) {
+					returnMaps.add(writeHeatmaps.get(i).get(j));
+				}
+			}
+			catch(InterruptedException e) {}
 		}
 
 		return returnMaps;
@@ -232,16 +253,18 @@ public class HeatMap5 {
 		return new Color(cx, cy, cz);
 	}
 
-	public class SecondPass implements Runnable {
+	public static class SecondPass implements Runnable {
 		private int start,
 					end;
 		private List<HeatMap> readHeatMaps;
 		private List<HeatMap> writeHeatMaps;
-		public SecondPass(List<HeatMap> rhm, List<HeatMap> whm, int start, int end) {
+		private int sampleRate;
+		public SecondPass(List<HeatMap> rhm, List<HeatMap> whm, int start, int end, int sampleRate) {
 			this.start = start;
 			this.end = end;
 			this.readHeatMaps = rhm;
 			this.writeHeatMaps = whm;
+			this.sampleRate = sampleRate;
 		}
 
 		@Override
@@ -256,6 +279,7 @@ public class HeatMap5 {
 				}
 				writeHeatMaps.add(tempMap);
 			}
+			System.out.println("Start: " + start + " End: " + end);
 		}
 	}
 }
