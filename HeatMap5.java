@@ -22,13 +22,14 @@ import java.lang.Math;
 public class HeatMap5 {
 	private static final int DIM = 20;
 	private static final int SLEEP_INTERVAL = 50; // milliseconds
-	private static final String FILENAME = "observation_gaussian.dat";
+	//private static final String FILENAME = "observation_gaussian.dat";
+	private static final String FILENAME = "observation_gaussianSmallLarge.dat";
 	//private static final String FILENAME = "observation_grant.dat";
 	private static final Color COLD = new Color(0x0a, 0x37, 0x66), HOT = Color.RED;
 	private static final double HOT_CALIB = 1.0;
 	private static final String REPLAY = "Replay";
 	private static final int N_THREADS = 16;
-	private static final int SAMPLING_TIME = 5; // ms
+	private static final int SAMPLING_TIME = 10; // ms
 	private static JFrame application;
 	private static JButton button;
 	private static Color[][] grid;
@@ -86,6 +87,7 @@ public class HeatMap5 {
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 		ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
 		//List<Observation> data = new ArrayList<Observation>();
+		System.out.println("Reading from " + FILENAME);
 		try {
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILENAME));
 			int timeNum = 0;
@@ -124,9 +126,12 @@ public class HeatMap5 {
 
 		HeatScan thing = new HeatScan(observations);
 		List<HeatMap> heatmaps = thing.getReduction();
+		System.out.println("Reduction Complete");
 
 		// decayed heatmaps
 		finalHeatmaps = decayedHeatmaps(heatmaps);
+		System.out.println("Second Pass Complete");
+		System.out.println("Beginning Animation sampling every " + SAMPLING_TIME + " ms");
 
 		current = 0;
 
@@ -164,16 +169,20 @@ public class HeatMap5 {
 //		}
 
 		int N = heatMaps.size();
-		System.out.println("N: " + N);
-		int numElements = (int) Math.ceil((double) N/ (double) SAMPLING_TIME);
-		int indexRange = (int) Math.ceil((double) N/ (double) N_THREADS);
-		System.out.println("indexRange: " + indexRange);
+		//System.out.println("N: " + N);
+		double numElements = (int) Math.ceil((double) N / (double) SAMPLING_TIME);
+		//int indexRange = (int) Math.ceil((double) N/ (double) N_THREADS);
+		int elementsPerThread = (int) Math.ceil(numElements / (double) N_THREADS);
+		//System.out.println("indexRange: " + indexRange);
 		int startIndex = 0;
 		Thread[] mapThreads = new Thread[N_THREADS];
 		ArrayList<ArrayList<HeatMap>> writeHeatmaps = new ArrayList<ArrayList<HeatMap>>();
 		for (int i = 0; i < N_THREADS; i++) {
-			int     endIndex,
-					calcIndex = startIndex + indexRange - 1;
+//			int     endIndex,
+//					calcIndex = startIndex + indexRange - 1;
+
+			int 	endIndex,
+					calcIndex = startIndex + (SAMPLING_TIME * elementsPerThread) - 1;
 
 			// setup endIndex
 			if (calcIndex >= N)
@@ -269,7 +278,9 @@ public class HeatMap5 {
 
 		@Override
 		public void run() {
-			for (int i = start; i < end; i++) {
+			//String numbers = "";
+			for (int i = start; i < end; i += sampleRate) {
+				//numbers += i + ", ";
 				int minIndex = i - 100;
 				if (minIndex < 0)
 					minIndex = 0;
@@ -279,7 +290,7 @@ public class HeatMap5 {
 				}
 				writeHeatMaps.add(tempMap);
 			}
-			System.out.println("Start: " + start + " End: " + end);
+			//System.out.println("Start: " + start + " End: " + end + "\n" + numbers);
 		}
 	}
 }

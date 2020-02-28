@@ -105,22 +105,15 @@ public class Observation implements Serializable {
 //	}
 
 	public static void main(String[] args) {
-		final String FILENAME = "observation_grant2.dat";
+		final String FILENAME = "observation_gaussianSmallLarge.dat";
 		Random r = new Random();
 		try {
 			List<Observation> observations = new ArrayList<Observation>();
-			double x = -0.9;
-			double y = -0.9;
-			for (long t = 0; t < 1_000; t++) {
-				if (t % 100 == 0) {
+			for (long t = 0; t < 5_000; t++) {
+				double x = r.nextGaussian() * 0.33;
+				double y = r.nextGaussian() * 0.33;
+				if (!(x < -1.0 || x > 1.0 || y < -1.0 || y > 1.0))
 					observations.add(new Observation(t, x, y));
-					observations.add(new Observation(t, x + 0.1, y));
-					observations.add(new Observation(t, x + 0.2, y));
-					observations.add(new Observation(t, x + 0.3, y));
-					observations.add(new Observation(t, x + 0.4, y));
-					x += 0.1;
-					y += 0.1;
-				}
 			}
 			toFile(observations, FILENAME);
 		} catch (IOException e) {
