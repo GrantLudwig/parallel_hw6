@@ -1,4 +1,4 @@
-/**
+/*
  * Grant Ludwig
  * CPSC 4600, Seattle University
  * HeatMap.java
@@ -81,6 +81,14 @@ public class HeatMap implements Serializable, Cloneable {
 		return this;
 	}
 
+	/**
+	 * Changed from original
+	 * Sets the values of the heatmap to a weight value, takes highest value
+	 * Used for figuring out decay
+	 * @param other
+	 * @param weight
+	 * @return
+	 */
 	public HeatMap addWeighted(HeatMap other, double weight) {
 		for (int i = 0; i < cells.length; i++) {
 			double weightCal = other.cells[i] * weight;
@@ -90,6 +98,11 @@ public class HeatMap implements Serializable, Cloneable {
 		return this;
 	}
 
+	/**
+	 * Added from original
+	 * Sets all cells above 1.0 to 1.0
+	 * Used for the second pass to correctly display decay
+	 */
 	public void normalize() {
 		for (int i = 0; i < cells.length; i++) {
 			if (cells[i] > 1.0)

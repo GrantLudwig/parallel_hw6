@@ -109,19 +109,22 @@ public class Observation implements Serializable {
 		Random r = new Random();
 		try {
 			List<Observation> observations = new ArrayList<Observation>();
-			double x = 0;
-			double y = 0;
-			int thing = 0;
-			for (long t = 0; t < 1_000; t++) {
-				for (int i = 0; i < 20; i++) {
-					observations.add(new Observation(t, x, y));
-					x += 1;
-				}
-				x = 0;
-				y += 1;
-				if (y >= 20)
-					break;
+			double[] xs = new double[3];
+			double[] ys = new double[3];
+			for (int i = 0; i < 3; i++) {
+				xs[i] = -0.95;
+				ys[i] = -0.95;
 			}
+			int col = 0;
+//			for (long t = 0; t < 1_000; t++) {
+//				for (int i = 0; i < 3; i++) {
+//					observations.add(new Observation(t, x, y));
+//				}
+//				x = -0.95;
+//				y += 0.1;
+//				if (y >= 1.0)
+//					break;
+//			}
 			toFile(observations, FILENAME);
 		} catch (IOException e) {
 			System.out.println("writing to " + FILENAME + "failed: " + e);
