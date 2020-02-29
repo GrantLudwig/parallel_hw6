@@ -1,7 +1,9 @@
-/*
- * Kevin Lundeen
- * Fall 2018, CPSC 5600, Seattle University
- * This is free and unencumbered software released into the public domain.
+/**
+ * Grant Ludwig
+ * CPSC 4600, Seattle University
+ * HeatMapDriver.java
+ * Adapted from HeatMap5.java created by Kevin Lundeen
+ * 2/28/20
  */
 
 import javax.swing.*;
@@ -16,10 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.lang.Math;
 
-/**
- * Step 5 from HW5
- */
-public class HeatMap5 {
+public class HeatMapDriver {
 	private static final int DIM = 20;
 	private static final int SLEEP_INTERVAL = 50; // milliseconds
 	//private static final String FILENAME = "observation_gaussian.dat";
@@ -62,7 +61,6 @@ public class HeatMap5 {
 			List<HeatMap> heatMaps = init();
 			for (int i = 0; i < datum.size(); i++) {
 				heatMaps.set((int)datum.get(i).time, new HeatMap(datum.get(i).x, datum.get(i).y));
-				//heatMaps.add(new HeatMap(datum.get(i).x, datum.get(i).y));
 			}
 			return heatMaps;
 		}
@@ -72,16 +70,13 @@ public class HeatMap5 {
 			List<HeatMap> heatMaps = init();
 			for (int i = 0; i < left.size(); i++) {
 				heatMaps.set(i, HeatMap.combine(left.get(i), right.get(i)));
-				//heatMaps.add(HeatMap.combine(left.get(i), right.get(i)));
 			}
 			return heatMaps;
 		}
 
 		@Override
 		protected void accum(List<HeatMap> hm, ArrayList<Observation> datum) {
-			//System.out.println("hm size: " + hm.size());
 			for (int i = 0; i < datum.size(); i++) {
-				//System.out.println("datum time: " + (int)datum.get(i).time);
 				hm.get((int)datum.get(i).time).accum(datum.get(i).x, datum.get(i).y);
 			}
 		}
@@ -89,7 +84,6 @@ public class HeatMap5 {
 
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 		ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
-		//List<Observation> data = new ArrayList<Observation>();
 		System.out.println("Reading from " + FILENAME);
 		try {
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILENAME));
@@ -103,7 +97,6 @@ public class HeatMap5 {
 					timeNum++;
 				}
 				observations.get(timeNum).add(obs);
-				//data.add(obs);
 				obs = (Observation) in.readObject();
 			}
 			in.close();
@@ -112,38 +105,15 @@ public class HeatMap5 {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		// print out time stamps
-		//System.out.println("Obs size: " + observations.size());
-//		for (int i = 0; i < observations.size(); i++) {
-//			System.out.println("Time " + i + ": " + observations.get(i).size());
-//		}
-
-//		ArrayList<HeatScan> HeatScans = new ArrayList<HeatScan>();
-//		ArrayList<HeatMap> heatmaps = new ArrayList<HeatMap>();
-//		for (int i = 0; i < observations.size(); i++) {
-//			System.out.println("ob size: " + observations.get(i).size());
-//			HeatScans.add(new HeatScan(observations.get(i)));
-//			heatmaps.add(HeatScans.get(i).getReduction());
-//		}
-		// System.out.println("reduction: " + scanner.getReduction());
-		//heatmaps = scanner.getScan();
 
 		HeatScan thing = new HeatScan(observations);
 		List<HeatMap> heatmaps = thing.getReduction();
-//		for (int i = 0; i < heatmaps.size(); i++){
-//			System.out.println("heatmaps " + heatmaps.get(i));
-//		}
 		System.out.println("Reduction Complete");
 
 		// decayed heatmaps
-		//System.out.println("Heatmaps size: " + heatmaps.size());
 		finalHeatmaps = decayedHeatmaps(heatmaps);
 		System.out.println("Second Pass Complete");
 		System.out.println("Beginning Animation sampling every " + SAMPLING_TIME + " ms");
-		//System.out.println("finalHeatmaps size: " + finalHeatmaps.size());
-//		for (int i = 0; i < finalHeatmaps.size(); i++){
-//			System.out.println("finalHeatmap " + finalHeatmaps.get(i));
-//		}
 
 		current = 0;
 
@@ -166,33 +136,13 @@ public class HeatMap5 {
 	}
 
 	private static List<HeatMap> decayedHeatmaps(List<HeatMap> heatMaps) {
-//		List<HeatMap> returnMaps = new ArrayList<HeatMap>();
-//
-//		for (int i = 0; i < heatMaps.size(); i++) {
-//			int minIndex = i - 100;
-//			if (minIndex < 0)
-//				minIndex = 0;
-//			HeatMap tempMap = heatMaps.get(i);
-//			for (int j = minIndex; j < i; j++) {
-//				tempMap = HeatMap.combine(tempMap, heatMaps.get(j));
-//				//tempMap.addWeighted(heatMaps.get(j), weight(i, j));
-//			}
-//			returnMaps.add(tempMap);
-//		}
-
 		int N = heatMaps.size();
-		//System.out.println("N: " + N);
 		double numElements = (int) Math.ceil((double) N / (double) SAMPLING_TIME);
-		//int indexRange = (int) Math.ceil((double) N/ (double) N_THREADS);
 		int elementsPerThread = (int) Math.ceil(numElements / (double) N_THREADS);
-		//System.out.println("elementsPerThread: " + elementsPerThread);
 		int startIndex = 0;
 		Thread[] mapThreads = new Thread[N_THREADS];
 		ArrayList<ArrayList<HeatMap>> writeHeatmaps = new ArrayList<ArrayList<HeatMap>>();
 		for (int i = 0; i < N_THREADS; i++) {
-//			int     endIndex,
-//					calcIndex = startIndex + indexRange - 1;
-
 			int 	endIndex,
 					calcIndex = startIndex + (SAMPLING_TIME * elementsPerThread) - 1;
 
@@ -203,6 +153,7 @@ public class HeatMap5 {
 				endIndex = calcIndex;
 
 			writeHeatmaps.add(new ArrayList<HeatMap>());
+
 			// start threads
 			mapThreads[i] = new Thread(new SecondPass(heatMaps, writeHeatmaps.get(i), startIndex, endIndex, SAMPLING_TIME));
 			mapThreads[i].start();
@@ -225,12 +176,6 @@ public class HeatMap5 {
 
 		return returnMaps;
 	}
-
-//	private static double weight(int time, int timeOfObservation) {
-//		double temp = 1.0 / (1 + time - timeOfObservation);
-//		//System.out.println("Weight t["  + time + "] t2[" + timeOfObservation + "]: " + temp);
-//		return temp;
-//	}
 
 	private static void animate() throws InterruptedException {
 		button.setEnabled(false);
@@ -262,7 +207,6 @@ public class HeatMap5 {
 	private static void fillGrid(Color[][] grid) {
 		for (int r = 0; r < grid.length; r++)
 			for (int c = 0; c < grid[r].length; c++) {
-				//System.out.println("CELL: " + finalHeatmaps.get(current).getCell(r, c));
 				grid[r][c] = interpolateColor(finalHeatmaps.get(current).getCell(r, c) / HOT_CALIB, COLD, HOT);
 			}
 	}
@@ -295,26 +239,21 @@ public class HeatMap5 {
 
 		@Override
 		public void run() {
-			//String numbers = "";
 			for (int i = start; i <= end; i += sampleRate) {
-				//numbers += i + ", ";
 				int minIndex = i - 100;
 				if (minIndex < 0)
 					minIndex = 0;
 				HeatMap tempMap = readHeatMaps.get(i);
 				tempMap.normalize();
 				for (int j = minIndex; j < i; j++) {
-					//tempMap = HeatMap.combine(tempMap, readHeatMaps.get(j));
 					tempMap.addWeighted(readHeatMaps.get(j), weight(i, j));
 				}
 				writeHeatMaps.add(tempMap);
 			}
-			//System.out.println("Start: " + start + " End: " + end);
 		}
 
 		private static double weight(int time, int timeOfObservation) {
 			double temp = 1.0 / (double) (1.0 + time - timeOfObservation);
-			//System.out.println("Weight t["  + time + "] t2[" + timeOfObservation + "]: " + temp);
 			return temp;
 		}
 	}
