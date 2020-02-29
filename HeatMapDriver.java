@@ -21,11 +21,6 @@ import java.lang.Math;
 public class HeatMapDriver {
 	private static final int DIM = 20;
 	private static final int SLEEP_INTERVAL = 50; // milliseconds
-	//private static final String FILENAME = "observation_gaussian.dat";
-	//private static final String FILENAME = "observation_scan.dat";
-	//private static final String FILENAME = "observation_easy.dat";
-	//private static final String FILENAME = "observation_gaussianSmallLarge.dat";
-	//private static final String FILENAME = "observation_grant.dat";
 	private static final String FILENAME = "observation_snake.dat";
 	private static final Color COLD = new Color(0x0a, 0x37, 0x66), HOT = Color.RED;
 	private static final double HOT_CALIB = 1.0;
@@ -37,9 +32,6 @@ public class HeatMapDriver {
 	private static Color[][] grid;
 	private static int current;
 	private static List<HeatMap> finalHeatmaps;
-
-	// Heatmaps are indexed by time
-	// Obervations are the observations in time
 
 	/**
 	 * List of HeatMaps returned is indexed by their time
@@ -92,16 +84,22 @@ public class HeatMapDriver {
 	}
 
 	/**
-	 * @param args Not used
+	 * @param Sampling time in ms
 	 * @throws FileNotFoundException
 	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
+
+		int sampleRate = SAMPLING_TIME;
+		if (args.length > 0)
+			sampleRate = Integer.parseInt(args[0]);
+
 		// Each ArrayList of Observations is full of observations that occured at that time
 		// The ArrayList of ArrayLists holds all the different times. Indexed by time stamp
 		// There can be empty ArrayLists of observations
 		ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
 		System.out.println("Reading from " + FILENAME);
+		int numObservations = 0;
 		try {
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILENAME));
 			int timeNum = 0;
@@ -114,6 +112,7 @@ public class HeatMapDriver {
 					timeNum++;
 				}
 				observations.get(timeNum).add(obs);
+				numObservations++;
 				obs = (Observation) in.readObject();
 			}
 			in.close();
@@ -123,6 +122,7 @@ public class HeatMapDriver {
 			System.exit(1);
 		}
 
+		System.out.println("Read " + numObservations + " observations from " + FILENAME);
 		// Create a HeatScan and reduce it
 		// Reduction is indexed by every time step. Adds all the events that occured at that time
 		HeatScan thing = new HeatScan(observations);
@@ -130,9 +130,9 @@ public class HeatMapDriver {
 		System.out.println("Reduction Complete");
 
 		// Complete the second pass
-		finalHeatmaps = decayedHeatmaps(heatmaps);
+		finalHeatmaps = decayedHeatmaps(heatmaps, sampleRate);
 		System.out.println("Second Pass Complete");
-		System.out.println("Beginning Animation sampling every " + SAMPLING_TIME + " ms");
+		System.out.println("Beginning Animation sampling every " + sampleRate + " ms");
 
 		current = 0;
 
@@ -159,9 +159,9 @@ public class HeatMapDriver {
 	 * @param heatMaps
 	 * @return List of Heatmaps, that are properly decayed and at the sampling time desired
 	 */
-	private static List<HeatMap> decayedHeatmaps(List<HeatMap> heatMaps) {
+	private static List<HeatMap> decayedHeatmaps(List<HeatMap> heatMaps, int sampleRate) {
 		int N = heatMaps.size();
-		double numElements = (int) Math.ceil((double) N / (double) SAMPLING_TIME); // get the numElements to sample
+		double numElements = (int) Math.ceil((double) N / (double) sampleRate); // get the numElements to sample
 		int elementsPerThread = (int) Math.ceil(numElements / (double) N_THREADS); // gets the numElements to sample per thread
 		int startIndex = 0;
 		Thread[] mapThreads = new Thread[N_THREADS];
@@ -170,7 +170,7 @@ public class HeatMapDriver {
 		// Setup and start threads
 		for (int i = 0; i < N_THREADS; i++) {
 			int 	endIndex,
-					calcIndex = startIndex + (SAMPLING_TIME * elementsPerThread) - 1;
+					calcIndex = startIndex + (sampleRate * elementsPerThread) - 1;
 
 			// setup endIndex
 			if (calcIndex >= N)
@@ -182,7 +182,7 @@ public class HeatMapDriver {
 			writeHeatmaps.add(new ArrayList<HeatMap>());
 
 			// start threads
-			mapThreads[i] = new Thread(new SecondPass(heatMaps, writeHeatmaps.get(i), startIndex, endIndex, SAMPLING_TIME));
+			mapThreads[i] = new Thread(new SecondPass(heatMaps, writeHeatmaps.get(i), startIndex, endIndex, sampleRate));
 			mapThreads[i].start();
 			startIndex = endIndex + 1;
 
