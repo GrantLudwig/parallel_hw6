@@ -73,10 +73,36 @@ public class HeatMap implements Serializable, Cloneable {
 		return this;
 	}
 	
+//	public HeatMap addWeighted(HeatMap other, double weight) {
+//		for (int i = 0; i < cells.length; i++)
+//			cells[i] += other.cells[i] * weight;
+//		return this;
+//	}
+
 	public HeatMap addWeighted(HeatMap other, double weight) {
-		for (int i = 0; i < cells.length; i++)
-			cells[i] += other.cells[i] * weight;
+		for (int i = 0; i < cells.length; i++) {
+//			if (other.cells[i] > 0) {
+//				double value;
+//				if (other.cells[i] > 1)
+//					value = 1.0;
+//				else
+//					value = other.cells[i];
+//				double weightCal = value * weight;
+//				if (cells[i] < weightCal)
+//					cells[i] = weightCal;
+//			}
+			double weightCal = other.cells[i] * weight;
+			if (cells[i] < weightCal)
+				cells[i] = weightCal;
+		}
 		return this;
+	}
+
+	public void normalize() {
+		for (int i = 0; i < cells.length; i++) {
+			if (cells[i] > 1.0)
+				cells[i] = 1.0;
+		}
 	}
 	
 	public String toString() {
