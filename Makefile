@@ -1,4 +1,4 @@
-CLASSES = Observation.class ColoredGrid.class HeatMap5.class GeneralScan3.class HeatMap.class
+CLASSES = Observation.class ColoredGrid.class HeatMapDriver.class GeneralScan3.class HeatMap.class
 JAVAFLAGS = -J-Xmx48m
 
 all: $(CLASSES)
