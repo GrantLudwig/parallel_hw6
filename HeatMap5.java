@@ -25,14 +25,14 @@ public class HeatMap5 {
 	//private static final String FILENAME = "observation_gaussian.dat";
 	//private static final String FILENAME = "observation_scan.dat";
 	//private static final String FILENAME = "observation_easy.dat";
-	//private static final String FILENAME = "observation_gaussianSmallLarge.dat";
+	private static final String FILENAME = "observation_gaussianSmallLarge.dat";
 	//private static final String FILENAME = "observation_grant.dat";
-	private static final String FILENAME = "observation_snake.dat";
+	//private static final String FILENAME = "observation_snake.dat";
 	private static final Color COLD = new Color(0x0a, 0x37, 0x66), HOT = Color.RED;
 	private static final double HOT_CALIB = 1.0;
 	private static final String REPLAY = "Replay";
 	private static final int N_THREADS = 16;
-	private static final int SAMPLING_TIME = 1; // ms
+	private static final int SAMPLING_TIME = 10; // ms
 	private static JFrame application;
 	private static JButton button;
 	private static Color[][] grid;
@@ -53,7 +53,7 @@ public class HeatMap5 {
 		protected List<HeatMap> init() {
 			List<HeatMap> heatMaps = new ArrayList<HeatMap>(numTimes);
 			for (int i = 0; i < numTimes; i++)
-				heatMaps.add(i, new HeatMap(DIM, 0, +19.0));
+				heatMaps.add(i, new HeatMap(DIM, -1.0, +1.0));
 			return heatMaps;
 		}
 
@@ -113,10 +113,10 @@ public class HeatMap5 {
 			System.exit(1);
 		}
 		// print out time stamps
-		System.out.println("Obs size: " + observations.size());
-		for (int i = 0; i < observations.size(); i++) {
-			System.out.println("Time " + i + ": " + observations.get(i).size());
-		}
+		//System.out.println("Obs size: " + observations.size());
+//		for (int i = 0; i < observations.size(); i++) {
+//			System.out.println("Time " + i + ": " + observations.get(i).size());
+//		}
 
 //		ArrayList<HeatScan> HeatScans = new ArrayList<HeatScan>();
 //		ArrayList<HeatMap> heatmaps = new ArrayList<HeatMap>();
@@ -136,11 +136,11 @@ public class HeatMap5 {
 		System.out.println("Reduction Complete");
 
 		// decayed heatmaps
-		System.out.println("Heatmaps size: " + heatmaps.size());
+		//System.out.println("Heatmaps size: " + heatmaps.size());
 		finalHeatmaps = decayedHeatmaps(heatmaps);
 		System.out.println("Second Pass Complete");
 		System.out.println("Beginning Animation sampling every " + SAMPLING_TIME + " ms");
-		System.out.println("finalHeatmaps size: " + finalHeatmaps.size());
+		//System.out.println("finalHeatmaps size: " + finalHeatmaps.size());
 //		for (int i = 0; i < finalHeatmaps.size(); i++){
 //			System.out.println("finalHeatmap " + finalHeatmaps.get(i));
 //		}
@@ -185,7 +185,7 @@ public class HeatMap5 {
 		double numElements = (int) Math.ceil((double) N / (double) SAMPLING_TIME);
 		//int indexRange = (int) Math.ceil((double) N/ (double) N_THREADS);
 		int elementsPerThread = (int) Math.ceil(numElements / (double) N_THREADS);
-		System.out.println("elementsPerThread: " + elementsPerThread);
+		//System.out.println("elementsPerThread: " + elementsPerThread);
 		int startIndex = 0;
 		Thread[] mapThreads = new Thread[N_THREADS];
 		ArrayList<ArrayList<HeatMap>> writeHeatmaps = new ArrayList<ArrayList<HeatMap>>();
@@ -309,7 +309,7 @@ public class HeatMap5 {
 				}
 				writeHeatMaps.add(tempMap);
 			}
-			System.out.println("Start: " + start + " End: " + end);
+			//System.out.println("Start: " + start + " End: " + end);
 		}
 
 		private static double weight(int time, int timeOfObservation) {
